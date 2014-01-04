@@ -20,6 +20,11 @@ die() {
   exit 1
 }
 
+success() {
+  log "$*"
+  exit 0
+}
+
 on_error() {
   die 'unknown error.'
 }
@@ -41,22 +46,25 @@ build_tarball() {
 }
 
 upload_tarball() {
-  curl \
+  curl --fail \
     -F filedata=@${REBUND_TARBALL} \
     --digest --user $REBUND_CREDENTIALS \
-    ${REBUND_ENDPOINT}/$(calculate_hash)
+    ${REBUND_ENDPOINT}/$(calculate_hash) \
+  || success "could not upload bundle"
 }
 
 expand_tarball() {
+  test -e $REBUND_TARBALL || success "no tarball"
   tar jxf $REBUND_TARBALL
 }
 
 download_tarball() {
-  curl \
+  curl --fail \
     --location \
     -o ${REBUND_TARBALL} \
     --digest --user $REBUND_CREDENTIALS \
-    ${REBUND_ENDPOINT}/$(calculate_hash)
+    ${REBUND_ENDPOINT}/$(calculate_hash) \
+    || success "could not download bundle"
 }
 
 rebund_upload() {
