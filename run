@@ -42,6 +42,7 @@ calculate_hash() {
 }
 
 build_tarball() {
+  test -e $REBUND_BUNDLE_DIR || die "cannot find bundle directory in ${REBUND_BUNDLE_DIR}"
   test -e $REBUND_TARBALL && success 'bundle already uploaded'
   tar jcf $REBUND_TARBALL $REBUND_BUNDLE_DIR
 }
@@ -78,26 +79,35 @@ rebund_download() {
   expand_tarball
 }
 
+rebund_usage() {
+  success "usage: $0 [-v] [upload|download]"
+}
+
 # cath errors
 trap on_error ERR
 
 # inherit the ERR trap in subprocesses
 set -E
 
-# verbose run
-set -x
+while test $# -gt 0 ; do
+  case $1 in
+    -v)
+      set -x
+      ;;
+    upload)
+      rebund_upload
+      exit 0
+      ;;
+    download)
+      rebund_download
+      exit 0
+      ;;
+    *)
+      rebund_usage
+      exit 1
+      ;;
+  esac
+  shift
+done
 
-case $1 in
-  upload)
-    rebund_upload
-    exit 0
-    ;;
-  download)
-    rebund_download
-    exit 0
-    ;;
-  *)
-    rebund_usage
-    exit 1
-    ;;
-esac
+rebund_usage
