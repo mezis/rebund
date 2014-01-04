@@ -1,0 +1,94 @@
+#!/bin/bash
+#
+#
+#
+
+# Configuration
+: ${REBUND_CREDENTIALS:=user:secret}
+: ${REBUND_ENDPOINT=http://keyfile-production.herokuapp.com}
+: ${REBUND_TARBALL:=bundle.tbz}
+: ${REBUND_BUNDLE_DIR:=vendor/bundle}
+
+
+
+log() {
+  echo "rebund: $*" > /dev/stderr
+}
+
+die() {
+  echo "fatal: $*" > /dev/stderr
+  exit 1
+}
+
+on_error() {
+  die 'unknown error.'
+}
+
+get_ruby_version() {
+  bundle exec ruby --version
+}
+
+get_gemfile() {
+  bundle exec sh -c 'echo $BUNDLE_GEMFILE'
+}
+
+calculate_hash() {
+  (get_ruby_version ; cat $(get_gemfile)) | openssl sha256 | sed -e 's/.* //'
+}
+
+build_tarball() {
+  tar jcf $REBUND_TARBALL $REBUND_BUNDLE_DIR
+}
+
+upload_tarball() {
+  curl \
+    -F filedata=@${REBUND_TARBALL} \
+    --digest --user $REBUND_CREDENTIALS \
+    ${REBUND_ENDPOINT}/$(calculate_hash)
+}
+
+expand_tarball() {
+  tar jxf $REBUND_TARBALL
+}
+
+download_tarball() {
+  curl \
+    --location \
+    -o ${REBUND_TARBALL} \
+    --digest --user $REBUND_CREDENTIALS \
+    ${REBUND_ENDPOINT}/$(calculate_hash)
+}
+
+rebund_upload() {
+  build_tarball
+  upload_tarball
+}
+
+rebund_download() {
+  download_tarball
+  expand_tarball
+}
+
+# cath errors
+trap on_error ERR
+
+# inherit the ERR trap in subprocesses
+set -E
+
+# verbose run
+set -x
+
+case $1 in
+  upload)
+    rebund_upload
+    exit 0
+    ;;
+  download)
+    rebund_download
+    exit 0
+    ;;
+  *)
+    rebund_usage
+    exit 1
+    ;;
+esac
