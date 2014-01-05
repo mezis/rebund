@@ -6,7 +6,7 @@ Makes your CI build much faster by caching your bundle.
 
 Running `bundle install` to get all gems ready is often the longest part of a
 build. Any Rails application will depend on tens of gems; and any gem, besides
-dependency, may have a fairly large build matrix.
+dependencies, may have a fairly large build matrix.
 
 Rebund can easily cut your build times by 75%, saving you time and saving the
 good folks at [Travis CI](https://travis-ci.org/) some money.
