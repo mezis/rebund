@@ -76,7 +76,7 @@ config:
 
     env:
       global:
-        - REBUND_ENDPOINT=http://my-rebund.io/
+        - REBUND_ENDPOINT=http://my-rebund.io
 
 Finally, add your rebund cretentials to the configuration:
 
